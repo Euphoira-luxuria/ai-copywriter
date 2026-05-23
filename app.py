@@ -8,12 +8,22 @@ from openai import OpenAI
 app = Flask(__name__)
 CORS(app)
 
-# 加载配置文件
+# 加载配置文件（本地）+ 环境变量（Vercel）
 CONFIG_FILE = Path(__file__).parent / "config.json"
 CONFIG = {}
 if CONFIG_FILE.exists():
     with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         CONFIG = json.load(f)
+
+# Vercel 环境下通过环境变量配置
+# 在 Vercel Dashboard → Settings → Environment Variables 设置：
+#   DEEPSEEK_API_KEY=sk-xxx
+#   DEEPSEEK_BASE_URL=https://api.deepseek.com
+#   LLM_MODEL=deepseek-chat
+for key in ("api_key", "base_url", "model"):
+    env_val = os.environ.get(f"DEEPSEEK_{key.upper()}")
+    if env_val and key not in CONFIG:
+        CONFIG[key] = env_val
 
 # 预设文案模板
 TEMPLATES = {
@@ -337,17 +347,21 @@ def polish():
 
 
 if __name__ == "__main__":
-    print("AI Copywriter Tool")
-    print("=" * 40)
-    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY") or CONFIG.get("api_key")
-    if not api_key:
-        print("[!] Please set API Key. Options:")
-        print("    1) Create config.json with api_key field")
-        print("    2) set DEEPSEEK_API_KEY=sk-xxx")
+    # Vercel serverless 环境下不执行 app.run()
+    if os.environ.get("VERCEL"):
+        pass
     else:
-        print("[OK] API Key configured (source: {})".format(
-            "config.json" if CONFIG.get("api_key") and not os.environ.get("DEEPSEEK_API_KEY") and not os.environ.get("OPENAI_API_KEY") else "env"
-        ))
-    print("=" * 40)
-    print("Open http://localhost:5001 in your browser")
-    app.run(debug=False, port=5001)
+        print("AI Copywriter Tool")
+        print("=" * 40)
+        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY") or CONFIG.get("api_key")
+        if not api_key:
+            print("[!] Please set API Key. Options:")
+            print("    1) Create config.json with api_key field")
+            print("    2) set DEEPSEEK_API_KEY=sk-xxx")
+        else:
+            print("[OK] API Key configured (source: {})".format(
+                "config.json" if CONFIG.get("api_key") and not os.environ.get("DEEPSEEK_API_KEY") and not os.environ.get("OPENAI_API_KEY") else "env"
+            ))
+        print("=" * 40)
+        print("Open http://localhost:5001 in your browser")
+        app.run(debug=False, port=5001)
