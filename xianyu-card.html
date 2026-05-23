@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>闲鱼商品图</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --accent: #a855f7;
+    --accent2: #6c5ce7;
+    --gold: #f59e0b;
+    --text: #e2e8f0;
+    --sub: #94a3b8;
+    --green: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 750px;
+    height: 1334px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* 背景光晕 */
+  .glow-1 {
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(168,85,247,0.15), transparent);
+    top: -50px; right: -100px;
+    pointer-events: none;
+  }
+  .glow-2 {
+    position: absolute;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(108,92,231,0.12), transparent);
+    bottom: 100px; left: -80px;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    padding: 40px 36px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 顶部标签 */
+  .badge-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .badge {
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .badge-hot {
+    background: rgba(239,68,68,0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+  .badge-ai {
+    background: rgba(168,85,247,0.15);
+    color: #a855f7;
+    border: 1px solid rgba(168,85,247,0.3);
+  }
+  .badge-new {
+    background: rgba(16,185,129,0.15);
+    color: #10b981;
+    border: 1px solid rgba(16,185,129,0.3);
+  }
+
+  /* 标题 */
+  .title {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+  .title .gradient {
+    background: linear-gradient(135deg, #c084fc, #818cf8, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    font-size: 22px;
+    color: var(--sub);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  /* 六宫格功能 */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-shrink: 0;
+  }
+  .feature-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 22px 20px;
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .feature-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    width: 52px;
+    text-align: center;
+  }
+  .feature-info h4 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .feature-info p {
+    font-size: 15px;
+    color: var(--sub);
+    line-height: 1.4;
+  }
+
+  /* 亮点条 */
+  .highlight-bar {
+    background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(108,92,231,0.1));
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 16px;
+    padding: 22px 28px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .highlight-item {
+    text-align: center;
+    flex: 1;
+  }
+  .highlight-item .num {
+    font-size: 32px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #c084fc, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .highlight-item .label {
+    font-size: 15px;
+    color: var(--sub);
+    margin-top: 2px;
+  }
+  .highlight-divider {
+    width: 1px;
+    height: 48px;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* 底部 CTA */
+  .cta-section {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .price {
+    font-size: 56px;
+    font-weight: 800;
+    color: #f59e0b;
+  }
+  .price-original {
+    font-size: 24px;
+    color: var(--sub);
+    text-decoration: line-through;
+  }
+  .price-tag {
+    background: rgba(245,158,11,0.15);
+    color: #f59e0b;
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .cta-btn {
+    display: block;
+    text-align: center;
+    background: linear-gradient(135deg, #a855f7, #6c5ce7);
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    padding: 22px;
+    border-radius: 16px;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 32px rgba(168,85,247,0.3);
+  }
+  .cta-sub {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 17px;
+    color: var(--sub);
+  }
+
+  /* 底部装饰线 */
+  .footer-line {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 15px;
+    color: rgba(148,163,184,0.4);
+    letter-spacing: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<div class="container">
+
+  <!-- 标签 -->
+  <div class="badge-row">
+    <span class="badge badge-hot">今日热门</span>
+    <span class="badge badge-ai">AI 智能生成</span>
+    <span class="badge badge-new">限时优惠</span>
+  </div>
+
+  <!-- 标题 -->
+  <div class="title">
+    <span class="gradient">AI 智能文案</span><br>
+    <span style="color:#e2e8f0;">一站式代写服务</span>
+  </div>
+  <div class="subtitle">
+    10 秒生成 · 支持 6 大类型 · 无限次润色<br>
+    小红书 / 朋友圈 / 短视频 / 电商 / 简历 / 公众号
+  </div>
+
+  <!-- 六宫格 -->
+  <div class="feature-grid">
+    <div class="feature-card">
+      <span class="feature-icon">📕</span>
+      <div class="feature-info">
+        <h4>小红书种草文案</h4>
+        <p>测评 / 干货 / vlog 4 种风格</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <div class="feature-info">
+        <h4>朋友圈营销文案</h4>
+        <p>走心 / 幽默 / 专业 / 生活</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎬</span>
+      <div class="feature-info">
+        <h4>短视频拍摄脚本</h4>
+        <p>含分镜+钩子+台词+时长</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🛒</span>
+      <div class="feature-info">
+        <h4>电商详情页文案</h4>
+        <p>主标题+卖点+参数+场景</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📄</span>
+      <div class="feature-info">
+        <h4>简历优化润色</h4>
+        <p>STAR 法则 / 大厂风格 / 量化成果</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📰</span>
+      <div class="feature-info">
+        <h4>公众号长文撰写</h4>
+        <p>800-1200 字深度文章/清单体</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 亮点 -->
+  <div class="highlight-bar">
+    <div class="highlight-item">
+      <div class="num">6</div>
+      <div class="label">文案类型</div>
+    </div>
+    <div class="highlight-divider"></div>
+    <div class="highlight-item">
+      <div class="num">24</div>
+      <div class="label">写作风格</div>
+    </div>
+    <div class="highlight-divider"></div>
+    <div class="highlight-item">
+      <div class="num">10s</div>
+      <div class="label">出稿速度</div>
+    </div>
+    <div class="highlight-divider"></div>
+    <div class="highlight-item">
+      <div class="num">99%</div>
+      <div class="label">满意率</div>
+    </div>
+  </div>
+
+  <!-- 价格和下单 -->
+  <div class="cta-section">
+    <div class="price-row">
+      <span class="price">￥9.9</span>
+      <span class="price-original">￥29.9</span>
+      <span class="price-tag">限时特惠</span>
+    </div>
+
+    <div class="cta-btn">
+      立即下单 · 10 秒出稿
+    </div>
+
+    <div class="cta-sub">
+      支持无限次润色修改 · 满意为止 · 24h 在线接单
+    </div>
+  </div>
+
+  <div class="footer-line">
+    AI 智能文案工作室 · 高效 · 专业 · 可靠
+  </div>
+
+</div>
+
+</body>
+</html>

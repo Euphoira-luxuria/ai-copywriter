@@ -1,0 +1,17 @@
+# API 密钥配置文件（绝对不能上传）
+config.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
