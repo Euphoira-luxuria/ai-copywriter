@@ -268,6 +268,53 @@
         }
 
         .generate-section { margin-top: 16px; }
+
+        /* Scene presets */
+        .scene-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 600px) {
+            .scene-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        .scene-btn {
+            padding: 10px 8px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            transition: all 0.2s;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        .scene-btn:hover {
+            border-color: #10b981;
+            background: #f0fdf6;
+        }
+        .scene-btn.active {
+            border-color: #10b981;
+            background: #ecfdf5;
+            color: #059669;
+            font-weight: 600;
+        }
+        .scene-btn .s-icon {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+        .scene-indicator {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #ecfdf5;
+            color: #059669;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +334,17 @@
         <div class="card">
             <div class="card-title"><span class="icon">🎨</span> 文案风格</div>
             <div class="style-row" id="styleRow"></div>
+        </div>
+
+        <!-- 场景预设（S 级 Prompt） -->
+        <div class="card">
+            <div class="card-title">
+                <span class="icon">🎯</span> 场景预设 <span style="color:var(--sub);font-weight:400;font-size:12px;">（选中后自动填入高质量约束）</span>
+                <span class="scene-indicator" id="sceneBadge" style="display:none;"></span>
+            </div>
+            <div class="scene-grid" id="sceneGrid">
+                <div style="grid-column:1/-1;color:var(--sub);font-size:13px;text-align:center;padding:8px;">加载中...</div>
+            </div>
         </div>
 
         <!-- 输入信息 -->
@@ -341,11 +399,18 @@
 
         // 模板图标
         const icons = { redbook: '📕', wechat: '💬', script: '🎬', product: '🛒', resume: '📄', gzh: '📰' };
+        let scenes = {};
+        let currentScene = null;
 
         async function init() {
-            const res = await fetch('/api/templates');
-            templates = await res.json();
+            const [tRes, sRes] = await Promise.all([
+                fetch('/api/templates'),
+                fetch('/api/scenes')
+            ]);
+            templates = await tRes.json();
+            scenes = await sRes.json();
             renderTemplates();
+            renderScenes();
             selectTemplate('redbook');
         }
 
@@ -375,6 +440,39 @@
             currentStyle = style;
             document.querySelectorAll('.style-pill').forEach(p => p.classList.remove('active'));
             event.target.classList.add('active');
+        }
+
+        function renderScenes() {
+            const grid = document.getElementById('sceneGrid');
+            grid.innerHTML = Object.entries(scenes).map(([key, s]) =>
+                `<button class="scene-btn" data-scene="${key}" onclick="selectScene('${key}')">
+                    <span class="s-icon">${s.icon}</span>${s.name}
+                </button>`
+            ).join('');
+        }
+
+        function selectScene(key) {
+            const badge = document.getElementById('sceneBadge');
+            if (currentScene === key) {
+                // 取消选中
+                currentScene = null;
+                document.getElementById('custom').value = '';
+                badge.style.display = 'none';
+                document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+                return;
+            }
+            currentScene = key;
+            const s = scenes[key];
+            document.getElementById('custom').value = s.constraints;
+            badge.textContent = '已选: ' + s.name;
+            badge.style.display = 'inline-block';
+            document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.scene-btn[data-scene="${key}"]`)?.classList.add('active');
+
+            // 自动推荐最佳文案类型
+            if (s.best_for && s.best_for.includes(currentTemplate)) {
+                // 当前类型已匹配，不需切换
+            }
         }
 
         async function generate() {
