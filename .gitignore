@@ -18,3 +18,5 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+.vercel

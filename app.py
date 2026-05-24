@@ -1,29 +1,10 @@
 import os
-import json
-from pathlib import Path
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
-
-# 加载配置文件（本地）+ 环境变量（Vercel）
-CONFIG_FILE = Path(__file__).parent / "config.json"
-CONFIG = {}
-if CONFIG_FILE.exists():
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        CONFIG = json.load(f)
-
-# Vercel 环境下通过环境变量配置
-# 在 Vercel Dashboard → Settings → Environment Variables 设置：
-#   DEEPSEEK_API_KEY=sk-xxx
-#   DEEPSEEK_BASE_URL=https://api.deepseek.com
-#   LLM_MODEL=deepseek-chat
-for key in ("api_key", "base_url", "model"):
-    env_val = os.environ.get(f"DEEPSEEK_{key.upper()}")
-    if env_val and key not in CONFIG:
-        CONFIG[key] = env_val
 
 # 预设文案模板
 TEMPLATES = {
@@ -237,18 +218,10 @@ POLISH_ACTIONS = {
 
 
 def get_client():
-    """获取 OpenAI 兼容客户端，支持多种 API 提供商"""
-    api_key = (
-        os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("DEEPSEEK_API_KEY")
-        or CONFIG.get("api_key")
-    )
-    base_url = (
-        os.environ.get("OPENAI_BASE_URL")
-        or os.environ.get("DEEPSEEK_BASE_URL")
-        or CONFIG.get("base_url")
-    )
-
+    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+    base_url = os.environ.get("OPENAI_BASE_URL") or os.environ.get("DEEPSEEK_BASE_URL")
+    if not api_key:
+        raise RuntimeError("未配置 API Key，请设置环境变量 DEEPSEEK_API_KEY")
     if base_url:
         return OpenAI(api_key=api_key, base_url=base_url)
     return OpenAI(api_key=api_key)
@@ -294,7 +267,7 @@ def generate():
     try:
         client = get_client()
         response = client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL") or CONFIG.get("model", "gpt-4o-mini"),
+            model=os.environ.get("LLM_MODEL", "deepseek-chat"),
             messages=[
                 {
                     "role": "system",
@@ -326,7 +299,7 @@ def polish():
     try:
         client = get_client()
         response = client.chat.completions.create(
-            model=os.environ.get("LLM_MODEL") or CONFIG.get("model", "gpt-4o-mini"),
+            model=os.environ.get("LLM_MODEL", "deepseek-chat"),
             messages=[
                 {
                     "role": "system",
@@ -347,21 +320,16 @@ def polish():
 
 
 if __name__ == "__main__":
-    # Vercel serverless 环境下不执行 app.run()
     if os.environ.get("VERCEL"):
         pass
     else:
         print("AI Copywriter Tool")
         print("=" * 40)
-        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY") or CONFIG.get("api_key")
+        api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
         if not api_key:
-            print("[!] Please set API Key. Options:")
-            print("    1) Create config.json with api_key field")
-            print("    2) set DEEPSEEK_API_KEY=sk-xxx")
+            print("[!] 未配置 API Key，请设置环境变量 DEEPSEEK_API_KEY")
         else:
-            print("[OK] API Key configured (source: {})".format(
-                "config.json" if CONFIG.get("api_key") and not os.environ.get("DEEPSEEK_API_KEY") and not os.environ.get("OPENAI_API_KEY") else "env"
-            ))
+            print("[OK] API Key 已配置")
         print("=" * 40)
         print("Open http://localhost:5001 in your browser")
         app.run(debug=False, port=5001)
